@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Maison Intelligente</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+
+<h1>Mini Maison Intelligente</h1>
+
+<div class="card">
+  <!-- Appel de la fonction connectArduino() Si le bouton est cliqué-->
+  <button class="connect" onclick="connectArduino()"> Connecter Arduino</button>
+  <div id="connectionStatus" class="status disconnected">Déconnecté</div>
+</div>
+
+<div class="card">
+  <h3>Ampoule</h3>
+  <!--Si le click est effectué, appel de la fonction lightOn()-->
+  <button class="on" onclick="lightOn()">ON</button>
+  <!--Si le click est effectué, appel de la fonction lightOf()-->
+  <button class="off" onclick="lightOff()">OFF</button>
+  <div id="lightStatus" class="status">État inconnu</div>
+</div>
+
+<div class="card">
+  <h3>Température</h3>
+  <!--Si le click est effectué, appel de la fonction getTemperature()-->
+  <button onclick="getTemperature()">Lire</button>
+  <div id="temperatureValue" class="value">-- °C</div>
+</div>
+
+<script>
+let port;
+let writer;
+let reader;
+let connected = false;
+
+// =================== CONNEXION ===================
+//the attribute of this function is 'async' because we don't want to freeze the page when requesting access to the serial port.
+async function connectArduino() {
+  // try is used to manage and anticipate errors by using exceptions 
+  try {
+    //find availables port 
+    port = await navigator.serial.requestPort();
+    //launch communication to baudrate : 9600 like in arduino
+    await port.open({ baudRate: 9600 });
+    //definitions of drivers which will send command and receive the messages sent by arduino 
+    writer = port.writable.getWriter();//describe the command which will be sent
+    reader = port.readable.getReader();//receive the arduino responce
+    //After loading this function, the connection becomes effective
+    connected = true;
+    updateConnectionStatus(true);//we past the true status to function Updateconntionstatus()
+  } 
+  catch (error) {//Management of connection error like exception
+    alert("Erreur de connexion à l'Arduino");
+  }
+}
+
+function updateConnectionStatus(state) {
+  const status = document.getElementById("connectionStatus");
+  if (state) {//Test on status parameter, if it's true:
+    status.textContent = "Connecté"; //we change the content in 'id = connectionStatus'
+    status.className = "status connected";//and we change value inside class, just around of id ('class = status disconnected')
+  } else {//else we just make the opposites of the previous actions
+    status.textContent = "Déconnecté";
+    status.className = "status disconnected";
+  }
+}
+
+// =================== ENVOI COMMANDE ===================
+//like the previous async fonction, we use async aigain to avoid freezing of the web page whend sending command to serial port 
+async function sendCommand(command) {
+  if (!connected) {
+    //Even if we click on light or temperature button while the web page is disconnected to serial port, the answer of query will be wrong  
+    alert("Arduino non connecté");
+    return "";//Here directly we leave and cancel function
+  }
+
+  const encoder = new TextEncoder();
+  await writer.write(encoder.encode(command + "\n"));
+
+  const { value } = await reader.read();
+  return new TextDecoder().decode(value).trim();
+}
+
+// =================== AMPOULE ===================
+async function lightOn() {
+  const response = await sendCommand("LIGHT_ON");
+  document.getElementById("lightStatus").textContent = "Allumée";
+}
+
+async function lightOff() {
+  const response = await sendCommand("LIGHT_OFF");
+  document.getElementById("lightStatus").textContent = "Éteinte";
+}
+
+// =================== TEMPÉRATURE ===================
+async function getTemperature() {
+  const response = await sendCommand("GET_TEMPERATURE");
+
+  if (response.startsWith("TEMP:")) {
+    const temp = response.split(":")[1];
+    document.getElementById("temperatureValue").textContent = temp + " °C";
+  }
+}
+</script>
+
+</body>
+</html>
