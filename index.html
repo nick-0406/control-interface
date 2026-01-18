@@ -12,7 +12,7 @@
 
 <div class="card">
   <!-- Appel de la fonction connectArduino() Si le bouton est cliqué-->
-  <button class="connect" onclick="connectArduino()"> Connecter Arduino</button>
+  <button class="connect" onclick="connectArduino()">Connecter Arduino</button>
   <div id="connectionStatus" class="status disconnected">Déconnecté</div>
 </div>
 
@@ -48,9 +48,9 @@ async function connectArduino() {
     //launch communication to baudrate : 9600 like in arduino
     await port.open({ baudRate: 9600 });
     //definitions of drivers which will send command and receive the messages sent by arduino 
-    writer = port.writable.getWriter();//describe the command which will be sent
+    writer = port.writable.getWriter();//describe the command which will send
     reader = port.readable.getReader();//receive the arduino responce
-    //After loading this function, the connection becomes effective
+    //After loading this function, connected become effective
     connected = true;
     updateConnectionStatus(true);//we past the true status to function Updateconntionstatus()
   } 
@@ -61,7 +61,7 @@ async function connectArduino() {
 
 function updateConnectionStatus(state) {
   const status = document.getElementById("connectionStatus");
-  if (state) {//Test on status parameter, if it's true:
+  if (state) {//Test on status parameter, if ti's true:
     status.textContent = "Connecté"; //we change the content in 'id = connectionStatus'
     status.className = "status connected";//and we change value inside class, just around of id ('class = status disconnected')
   } else {//else we just make the opposites of the previous actions
@@ -100,11 +100,7 @@ async function lightOff() {
 // =================== TEMPÉRATURE ===================
 async function getTemperature() {
   const response = await sendCommand("GET_TEMPERATURE");
-
-  if (response.startsWith("TEMP:")) {
-    const temp = response.split(":")[1];
-    document.getElementById("temperatureValue").textContent = temp + " °C";
-  }
+  document.getElementById("temperatureValue").textContent = response + " °C";
 }
 </script>
 

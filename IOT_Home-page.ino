@@ -35,12 +35,6 @@ void manageQuery(String data){
       status = false;
       Serial.println("OK");
   }
-  else if(data == "GET_LIGHT_STATUS"){
-    if(status)
-        Serial.print("LIGHT : ON");
-    else
-        Serial.print("LIGHT : OFF");
-  }
   else if (data == "GET_TEMPERATURE")
     Serial.print(dht.readTemperature());
   else 
